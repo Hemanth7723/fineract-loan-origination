@@ -20,6 +20,7 @@
 package org.apache.fineract.los.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fineract.los.statemachine.LoanStateTransitionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -58,6 +59,12 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(DuplicateApprovalException.class)
   public ResponseEntity<ErrorResponse> handleDuplicateApproval(
       final DuplicateApprovalException ex) {
+    return build(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
+  @ExceptionHandler(LoanStateTransitionException.class)
+  public ResponseEntity<ErrorResponse> handleInvalidStateTransition(
+      final LoanStateTransitionException ex) {
     return build(HttpStatus.CONFLICT, ex.getMessage());
   }
 
