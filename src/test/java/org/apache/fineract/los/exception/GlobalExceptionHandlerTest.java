@@ -27,6 +27,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 
 /** Unit tests for {@link GlobalExceptionHandler}. */
 @DisplayName("GlobalExceptionHandler")
@@ -50,5 +52,31 @@ class GlobalExceptionHandlerTest {
     assertThat(response.getBody().getMessage())
         .isEqualTo(ex.getMessage())
         .contains("APPROVED", "SUBMITTED");
+  }
+
+  @Test
+  @DisplayName("AuthorizationDeniedException maps to 403 Forbidden with a fixed message")
+  void authorizationDeniedReturnsForbidden() {
+    final ResponseEntity<ErrorResponse> response =
+        handler.handleAccessDenied(new AuthorizationDeniedException("Access Denied"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
+    assertThat(response.getBody().getError()).isEqualTo(HttpStatus.FORBIDDEN.getReasonPhrase());
+    assertThat(response.getBody().getMessage()).isEqualTo(LosErrorConstants.MSG_ACCESS_DENIED);
+  }
+
+  @Test
+  @DisplayName("AccessDeniedException does not expose its own message")
+  void accessDeniedDoesNotExposeMessage() {
+    final ResponseEntity<ErrorResponse> response =
+        handler.handleAccessDenied(new AccessDeniedException("internal detail"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().getMessage())
+        .isEqualTo(LosErrorConstants.MSG_ACCESS_DENIED)
+        .doesNotContain("internal detail");
   }
 }
