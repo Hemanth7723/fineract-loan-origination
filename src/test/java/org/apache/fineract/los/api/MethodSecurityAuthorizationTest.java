@@ -34,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.apache.fineract.los.bridge.DisbursementBridgeService;
 import org.apache.fineract.los.exception.GlobalExceptionHandler;
 import org.apache.fineract.los.exception.LosErrorConstants;
+import org.apache.fineract.los.repository.ApprovalStageRepository;
+import org.apache.fineract.los.repository.CustomerCredentialRepository;
 import org.apache.fineract.los.security.CustomerPrincipal;
 import org.apache.fineract.los.security.StaffPrincipal;
 import org.apache.fineract.los.service.ApprovalWorkflowService;
@@ -48,10 +50,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -75,6 +79,9 @@ class MethodSecurityAuthorizationTest {
   @Mock private CreditScoringService creditScoringService;
   @Mock private ApprovalWorkflowService approvalWorkflowService;
   @Mock private StaffManagementService staffManagementService;
+  @Mock private ApprovalStageRepository approvalStageRepository;
+  @Mock private CustomerCredentialRepository customerCredentialRepository;
+  @Mock private PasswordEncoder passwordEncoder;
 
   private MockMvc mockMvc;
 
@@ -86,7 +93,12 @@ class MethodSecurityAuthorizationTest {
                 withMethodSecurity(
                     new LoanApplicationController(
                         loanApplicationService, creditScoringService, approvalWorkflowService)),
-                withMethodSecurity(new AdminStaffController(staffManagementService)))
+                withMethodSecurity(new AdminStaffController(staffManagementService)),
+                withMethodSecurity(
+                    new ApprovalController(
+                        approvalWorkflowService, approvalStageRepository, loanApplicationService)),
+                withMethodSecurity(
+                    new AdminCustomerController(customerCredentialRepository, passwordEncoder)))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
   }
@@ -139,6 +151,41 @@ class MethodSecurityAuthorizationTest {
         .andExpect(jsonPath("$.message").value(LosErrorConstants.MSG_ACCESS_DENIED));
 
     verifyNoInteractions(staffManagementService);
+  }
+
+  @Test
+  @DisplayName("Customer reading approval history gets 403 and no history is loaded")
+  void customerCannotReadApprovalHistory() throws Exception {
+    loginAs(customer());
+
+    mockMvc
+        .perform(
+            get("/api/v1/loan-applications/{ref}/approval-decisions", APPLICATION_REF)
+                .header(TENANT_HEADER, TENANT_ID))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value(LosErrorConstants.MSG_ACCESS_DENIED));
+
+    verifyNoInteractions(approvalStageRepository, loanApplicationService);
+  }
+
+  @Test
+  @DisplayName("Loan officer registering a customer account gets 403 and nothing is saved")
+  void staffWithoutAdminRoleCannotRegisterCustomer() throws Exception {
+    loginAs(loanOfficer());
+
+    mockMvc
+        .perform(
+            post("/api/v1/admin/customers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {"username":"new.customer","password":"a-long-password",\
+                    "fineractClientId":42,"tenantId":"default"}
+                    """))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value(LosErrorConstants.MSG_ACCESS_DENIED));
+
+    verifyNoInteractions(customerCredentialRepository, passwordEncoder);
   }
 
   @Test
