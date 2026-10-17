@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.los.statemachine.LoanStateTransitionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -77,6 +78,16 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(LosRoleNotAssignedException.class)
   public ResponseEntity<ErrorResponse> handleNoLosRole(final LosRoleNotAssignedException ex) {
     return build(HttpStatus.FORBIDDEN, ex.getMessage());
+  }
+
+  /**
+   * Covers method-security denials ({@code @PreAuthorize}), which Spring Security raises as {@link
+   * org.springframework.security.authorization.AuthorizationDeniedException}, a subclass of {@link
+   * AccessDeniedException}. A fixed message is returned so authorization details are not exposed.
+   */
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ErrorResponse> handleAccessDenied(final AccessDeniedException ex) {
+    return build(HttpStatus.FORBIDDEN, LosErrorConstants.MSG_ACCESS_DENIED);
   }
 
   @ExceptionHandler(FineractIntegrationException.class)
