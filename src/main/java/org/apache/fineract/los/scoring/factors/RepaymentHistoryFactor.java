@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.scoring.factors;
@@ -31,15 +30,10 @@ import org.springframework.stereotype.Component;
 /**
  * Scores the applicant's past repayment behaviour in Fineract.
  *
- * <p>Default weight: 15 points (configurable via {@code los.scoring.weights.repayment-history}).
- *
- * <p>Critical design decision: first-time borrowers with no history (both counts null or zero) are
- * scored at the <strong>midpoint</strong> rather than zero. Penalising first-time borrowers as if
- * they had bad history would unfairly exclude new applicants — common in microfinance where many
- * borrowers have no formal credit history.
- *
- * <p>All arithmetic uses {@link BigDecimal} exclusively — never mixed with {@code float}/{@code
- * double} — to avoid precision drift on financial calculations.
+ * Default weight: 15 points (configurable via {@code los.scoring.weights.repayment-history}).
+ * First-time borrowers with no history are scored at the midpoint rather than zero — penalising
+ * them as if they had bad history would unfairly exclude new applicants, which is common in
+ * microfinance where many borrowers have no formal credit history.
  */
 @Component
 @RequiredArgsConstructor
@@ -63,9 +57,7 @@ public class RepaymentHistoryFactor implements ScoringFactor {
       return buildScore(
           midpoint,
           max,
-          "No prior repayment history — first-time "
-              + "borrower scored at midpoint rather "
-              + "than penalised.");
+          "No prior repayment history — first-time borrower scored at midpoint rather than penalised.");
     }
 
     final BigDecimal successRate =
@@ -81,7 +73,7 @@ public class RepaymentHistoryFactor implements ScoringFactor {
         points,
         max,
         String.format(
-            "Repayment history: %d successful, %d missed " + "out of %d total — %s%% success rate.",
+            "Repayment history: %d successful, %d missed out of %d total — %s%% success rate.",
             successful, missed, total, successPercent));
   }
 

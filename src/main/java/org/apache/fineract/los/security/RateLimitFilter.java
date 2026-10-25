@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.security;
@@ -38,41 +37,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * Rate limiting filter using token bucket algorithm to prevent brute-force attacks and API abuse.
+ * Rate limiting filter using the token bucket algorithm to prevent brute-force attacks and API abuse.
  *
- * <p>Applies different rate limits based on endpoint sensitivity:
- *
- * <ul>
- *   <li><strong>Auth endpoints</strong> (/api/v1/auth/**): 100 requests per minute per IP — relaxed
- *       for demo usage allowing multiple role logins
- *   <li><strong>Admin endpoints</strong> (/api/v1/admin/**): 20 requests per minute per IP —
- *       prevents abuse of privileged operations
- *   <li><strong>Other endpoints</strong>: 100 requests per minute per IP — prevents general API
- *       abuse and DoS
- * </ul>
- *
- * <p>Rate limits are tracked per client IP address using an in-memory cache that expires entries
- * after 15 minutes of inactivity.
- *
- * <p>When rate limit is exceeded, returns HTTP 429 (Too Many Requests) with Retry-After header.
+ * Auth endpoints (/api/v1/auth/**): 100 requests/minute per IP. Admin endpoints
+ * (/api/v1/admin/**): 20 requests/minute per IP. All other endpoints: 100 requests/minute per IP.
+ * Buckets are tracked per client IP and expire after 15 minutes of inactivity.
+ * Requests exceeding the limit receive HTTP 429 with a Retry-After header.
  */
 @Slf4j
 @Component
 public class RateLimitFilter implements Filter {
 
-  // Auth endpoints: Relaxed limit for demo usage (multiple role logins)
   private static final int AUTH_MAX_REQUESTS = 100;
   private static final Duration AUTH_WINDOW = Duration.ofMinutes(1);
 
-  // Admin endpoints: Moderate limit for privileged operations
   private static final int ADMIN_MAX_REQUESTS = 20;
   private static final Duration ADMIN_WINDOW = Duration.ofMinutes(1);
 
-  // General endpoints: Liberal limit for normal usage
   private static final int GENERAL_MAX_REQUESTS = 100;
   private static final Duration GENERAL_WINDOW = Duration.ofMinutes(1);
 
-  // Cache for storing rate limit buckets per IP address
   private final Cache<String, Bucket> authBuckets =
       Caffeine.newBuilder().expireAfterWrite(15, TimeUnit.MINUTES).maximumSize(10000).build();
 
@@ -96,7 +80,6 @@ public class RateLimitFilter implements Filter {
     Bucket bucket;
     long retryAfterSeconds;
 
-    // Determine which rate limit to apply based on endpoint
     if (requestUri.startsWith("/api/v1/auth/")) {
       bucket = authBuckets.get(clientIp, k -> createAuthBucket());
       retryAfterSeconds = AUTH_WINDOW.toSeconds();
@@ -108,15 +91,12 @@ public class RateLimitFilter implements Filter {
       retryAfterSeconds = GENERAL_WINDOW.toSeconds();
     }
 
-    // Try to consume one token from the bucket
     if (bucket.tryConsume(1)) {
-      // Request allowed - proceed
       chain.doFilter(request, response);
     } else {
-      // Rate limit exceeded - reject request
       log.warn("Rate limit exceeded for IP [{}] on endpoint [{}]", clientIp, requestUri);
 
-      httpResponse.setStatus(429); // Too Many Requests
+      httpResponse.setStatus(429);
       httpResponse.setHeader("Retry-After", String.valueOf(retryAfterSeconds));
       httpResponse.setContentType("application/json");
       httpResponse
@@ -128,11 +108,7 @@ public class RateLimitFilter implements Filter {
     }
   }
 
-  /**
-   * Creates a bucket for authentication endpoints with relaxed limits for demo.
-   *
-   * <p>Allows 100 requests per minute with greedy refill strategy.
-   */
+  /** Creates a bucket for authentication endpoints — 100 requests per minute. */
   private Bucket createAuthBucket() {
     return Bucket.builder()
         .addLimit(
@@ -140,11 +116,7 @@ public class RateLimitFilter implements Filter {
         .build();
   }
 
-  /**
-   * Creates a bucket for admin endpoints with moderate limits.
-   *
-   * <p>Allows 20 requests per minute with greedy refill strategy.
-   */
+  /** Creates a bucket for admin endpoints — 20 requests per minute. */
   private Bucket createAdminBucket() {
     return Bucket.builder()
         .addLimit(
@@ -152,11 +124,7 @@ public class RateLimitFilter implements Filter {
         .build();
   }
 
-  /**
-   * Creates a bucket for general endpoints with liberal limits.
-   *
-   * <p>Allows 100 requests per minute with greedy refill strategy.
-   */
+  /** Creates a bucket for general endpoints — 100 requests per minute. */
   private Bucket createGeneralBucket() {
     return Bucket.builder()
         .addLimit(
@@ -166,16 +134,12 @@ public class RateLimitFilter implements Filter {
   }
 
   /**
-   * Extracts the client IP address from the request.
-   *
-   * <p>Checks X-Forwarded-For header first (for requests behind proxies/load balancers), then falls
-   * back to remote address.
+   * Extracts the client IP, checking X-Forwarded-For first for requests behind proxies,
+   * then falling back to the remote address.
    */
   private String getClientIp(final HttpServletRequest request) {
     String ip = request.getHeader("X-Forwarded-For");
     if (ip != null && !ip.isEmpty()) {
-      // X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2, ...)
-      // Take the first one which is the original client
       ip = ip.split(",")[0].trim();
     } else {
       ip = request.getRemoteAddr();

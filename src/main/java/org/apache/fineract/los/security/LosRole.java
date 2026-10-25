@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 package org.apache.fineract.los.security;
 
@@ -25,12 +24,10 @@ import org.springframework.security.core.GrantedAuthority;
 /**
  * LOS workflow roles, one per configured approval stage.
  *
- * <p>Enum constant names are intentionally identical to the stage-name strings configured under
- * {@code los.workflow.stages} (e.g. {@code "LOAN_OFFICER"}), so a stage name resolved by {@link
- * org.apache.fineract.los.workflow.ApprovalWorkflowProperties#stageForFineractRole(String)} can be
- * converted directly via {@link #valueOf(String)} — adding a fourth workflow stage only requires
- * adding a fourth constant here plus a fourth entry in {@code los.workflow.stages} and {@code
- * los.workflow.role-mapping}, no other code changes.
+ * Constant names match the stage-name strings configured under {@code los.workflow.stages}
+ * (e.g. {@code "LOAN_OFFICER"}), so a resolved stage name can be converted directly via
+ * {@link #valueOf(String)}. Adding a new workflow stage requires only a new constant here
+ * plus entries in {@code los.workflow.stages} and {@code los.workflow.role-mapping}.
  */
 public enum LosRole {
   LOAN_OFFICER,
@@ -41,12 +38,7 @@ public enum LosRole {
 
   /**
    * Resolves the first {@code ROLE_<LosRole>} authority present on an authenticated principal.
-   *
-   * <p>Staff principals carry exactly one such authority (see {@link
-   * FineractAuthenticationProvider}), alongside the unconditional {@code ROLE_STAFF}. Authorities
-   * that aren't a recognised {@link LosRole} name (e.g. {@code ROLE_STAFF} itself) are ignored
-   * rather than throwing, since a principal is expected to carry authorities this enum doesn't
-   * model.
+   * Authorities that do not map to a recognised {@link LosRole} are silently ignored.
    *
    * @param authorities authorities granted to the authenticated principal
    * @return the matching LOS role, or empty if none of the principal's authorities map to one

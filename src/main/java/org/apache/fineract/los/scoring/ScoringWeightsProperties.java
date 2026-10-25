@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.scoring;
@@ -33,15 +32,10 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Externalised configuration for credit scoring factor weights and thresholds.
  *
- * <p>Bound from {@code application.yml} under the prefix {@code los.scoring.weights}. Institutions
- * can tune these values without recompiling — only a restart is required.
- *
- * <p>Default values follow CGAP microfinance credit assessment guidelines and are applied if no
- * configuration is provided.
- *
- * <p>{@link #validateWeightsSumToHundred()} runs on startup via {@code @PostConstruct} — fails fast
- * with a clear error if weights are misconfigured, rather than silently producing incorrect scores
- * at runtime.
+ * Bound from {@code application.yml} under the prefix {@code los.scoring.weights}. Institutions
+ * can tune these values without recompiling. Default values follow CGAP microfinance credit
+ * assessment guidelines. {@link #validateWeightsSumToHundred()} runs on startup via
+ * {@code @PostConstruct} and fails fast if weights are misconfigured.
  */
 @Slf4j
 @Getter
@@ -49,10 +43,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "los.scoring.weights")
 public class ScoringWeightsProperties {
-
-  // ─────────────────────────────────────────────────────────
-  // Factor Weights
-  // ─────────────────────────────────────────────────────────
 
   /** Weight for income-to-loan ratio factor. Default 30. */
   @Min(0)
@@ -79,10 +69,6 @@ public class ScoringWeightsProperties {
   @Max(100)
   private int loanPurposeRisk = 10;
 
-  // ─────────────────────────────────────────────────────────
-  // Income Ratio Thresholds
-  // ─────────────────────────────────────────────────────────
-
   /** Ratio at or above which income-ratio factor scores full points. */
   @DecimalMin("0.0")
   private BigDecimal incomeRatioFullThreshold = new BigDecimal("0.20");
@@ -94,10 +80,6 @@ public class ScoringWeightsProperties {
   /** Ratio at or above which income-ratio factor scores 50%. */
   @DecimalMin("0.0")
   private BigDecimal incomeRatioMediumThreshold = new BigDecimal("0.05");
-
-  // ─────────────────────────────────────────────────────────
-  // Debt Burden Thresholds
-  // ─────────────────────────────────────────────────────────
 
   /** Ratio at or below which debt-burden factor scores full points. */
   @DecimalMin("0.0")
@@ -128,13 +110,10 @@ public class ScoringWeightsProperties {
     if (total != 100) {
       throw new IllegalStateException(
           String.format(
-              "Credit scoring weights must sum to 100 "
-                  + "but summed to %d. Check "
-                  + "los.scoring.weights.* configuration: "
-                  + "income-ratio=%d, debt-burden=%d, "
-                  + "employment-stability=%d, "
-                  + "repayment-history=%d, "
-                  + "loan-purpose-risk=%d",
+              "Credit scoring weights must sum to 100 but summed to %d. "
+                  + "Check los.scoring.weights.* configuration: "
+                  + "income-ratio=%d, debt-burden=%d, employment-stability=%d, "
+                  + "repayment-history=%d, loan-purpose-risk=%d",
               total,
               incomeRatio,
               debtBurden,
@@ -144,10 +123,8 @@ public class ScoringWeightsProperties {
     }
 
     log.info(
-        "Credit scoring weights validated successfully: "
-            + "incomeRatio={} debtBurden={} "
-            + "employmentStability={} "
-            + "repaymentHistory={} loanPurposeRisk={}",
+        "Credit scoring weights validated: incomeRatio={} debtBurden={} "
+            + "employmentStability={} repaymentHistory={} loanPurposeRisk={}",
         incomeRatio,
         debtBurden,
         employmentStability,

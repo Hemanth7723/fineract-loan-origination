@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.scoring.factors;
@@ -28,21 +27,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
- * Scores the applicant's employment stability based on employment status and duration in current
- * employment.
+ * Scores the applicant's employment stability based on employment status and duration.
  *
- * <p>Default weight: 20 points (configurable via {@code los.scoring.weights.employment-stability}).
- *
- * <p>Combines two signals:
- *
- * <ul>
- *   <li>Employment status — EMPLOYED and SELF_EMPLOYED score higher than INFORMAL or UNEMPLOYED
- *   <li>Duration — longer tenure indicates lower job-loss risk
- * </ul>
- *
- * <p>Status contributes 60% of this factor's points, duration contributes the remaining 40% —
- * reflecting that having stable income at all matters more than how long, per CGAP guidance for
- * resource-constrained lending environments.
+ * Default weight: 20 points (configurable via {@code los.scoring.weights.employment-stability}).
+ * Status contributes 60% of the factor score, duration the remaining 40%. EMPLOYED and
+ * SELF_EMPLOYED score higher than INFORMAL or UNEMPLOYED.
  */
 @Component
 @RequiredArgsConstructor
@@ -73,7 +62,7 @@ public class EmploymentStabilityFactor implements ScoringFactor {
         .maxPoints(max)
         .explanation(
             String.format(
-                "Employment status [%s] with %s tenure " + "contributes %d of %d points.",
+                "Employment status [%s] with %s tenure contributes %d of %d points.",
                 StringUtils.hasText(profile.getEmploymentStatus())
                     ? profile.getEmploymentStatus()
                     : "UNKNOWN",

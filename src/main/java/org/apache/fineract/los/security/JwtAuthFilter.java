@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.security;
@@ -68,7 +67,7 @@ public class JwtAuthFilter implements jakarta.servlet.Filter {
       final String correlationId = claims.get(CLAIM_CORRELATION_ID, String.class);
       final String userType = claims.get(CLAIM_USER_TYPE, String.class);
 
-      // SECURITY: Validate JWT tenantId matches request header to prevent cross-tenant access
+      // Validate JWT tenantId matches the request header to prevent cross-tenant access.
       final String headerTenantId = httpRequest.getHeader(TENANT_HEADER);
       if (jwtTenantId != null && headerTenantId != null && !jwtTenantId.equals(headerTenantId)) {
         SecurityContextHolder.clearContext();
@@ -83,7 +82,6 @@ public class JwtAuthFilter implements jakarta.servlet.Filter {
         return;
       }
 
-      // Add correlation and tenant to MDC for logging
       if (correlationId != null) {
         MDC.put("correlationId", correlationId);
       }
@@ -93,9 +91,7 @@ public class JwtAuthFilter implements jakarta.servlet.Filter {
 
       final UsernamePasswordAuthenticationToken authentication;
 
-      // Create appropriate principal based on user type
       if ("STAFF".equals(userType)) {
-        // Staff user - extract LOS role
         final String losRole = claims.get(CLAIM_LOS_ROLE, String.class);
         final StaffPrincipal staffPrincipal = new StaffPrincipal(username, jwtTenantId, losRole);
         authentication =
@@ -104,7 +100,6 @@ public class JwtAuthFilter implements jakarta.servlet.Filter {
         MDC.put("userType", "STAFF");
         MDC.put("losRole", losRole != null ? losRole : "UNKNOWN");
       } else {
-        // Customer user - extract client ID
         final Number clientIdNum = claims.get(CLAIM_CLIENT_ID, Number.class);
         final Long clientId = clientIdNum != null ? clientIdNum.longValue() : null;
         final CustomerPrincipal customerPrincipal =
