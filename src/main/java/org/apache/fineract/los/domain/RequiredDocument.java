@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.domain;
@@ -42,11 +41,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 /**
  * Tracks a document required for a loan application.
  *
- * <p>Many-to-one relationship with {@code LoanApplication}. One application may require multiple
- * documents — ID proof, income proof, bank statement etc.
- *
- * <p>The state machine uses this entity to enforce that all required documents are VERIFIED before
- * an application can transition from SUBMITTED to UNDER_REVIEW.
+ * Many-to-one with {@code LoanApplication}. One application may require multiple documents —
+ * ID proof, income proof, bank statement, etc.
  */
 @Entity
 @Table(name = "required_document")
@@ -61,34 +57,21 @@ public class RequiredDocument {
   @Column(name = "id", nullable = false, updatable = false)
   private Long id;
 
-  /**
-   * The loan application this document belongs to. LAZY fetch — documents not loaded unless
-   * explicitly accessed.
-   */
+  /** The loan application this document belongs to. Loaded lazily. */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "application_id", nullable = false, updatable = false)
   private LoanApplication application;
 
-  /**
-   * Type of document required. Examples: ID_PROOF, INCOME_PROOF, BANK_STATEMENT, COLLATERAL_PROOF,
-   * GUARANTOR_ID. Institutions configure their required document types via application.properties.
-   */
+  /** Type of document, e.g. ID_PROOF, INCOME_PROOF, BANK_STATEMENT, COLLATERAL_PROOF. */
   @Column(name = "document_type", nullable = false, length = 100)
   private String documentType;
 
-  /**
-   * Current status of this document in the verification pipeline. Defaults to PENDING — document
-   * required but not yet uploaded. Transitions: PENDING → UPLOADED → VERIFIED or REJECTED.
-   */
+  /** Current verification status. Transitions: PENDING -> UPLOADED -> VERIFIED or REJECTED. */
   @Enumerated(EnumType.STRING)
   @Column(name = "document_status", nullable = false, length = 30)
   private DocumentStatus documentStatus = DocumentStatus.PENDING;
 
-  /**
-   * Original filename of the uploaded document. Null until the applicant uploads the document.
-   * Stored for audit and retrieval purposes only — actual file storage is handled by the document
-   * storage adapter (local filesystem in dev, Azure Blob in prod).
-   */
+  /** Original filename of the uploaded document. Null until the applicant uploads. */
   @Column(name = "file_name", length = 255)
   private String fileName;
 
@@ -96,7 +79,7 @@ public class RequiredDocument {
   @Column(name = "uploaded_at")
   private LocalDateTime uploadedAt;
 
-  /** Tenant identifier — must match parent LoanApplication. */
+  /** Tenant identifier — must match the parent LoanApplication. */
   @Column(name = "tenant_id", nullable = false, length = 100, updatable = false)
   private String tenantId;
 

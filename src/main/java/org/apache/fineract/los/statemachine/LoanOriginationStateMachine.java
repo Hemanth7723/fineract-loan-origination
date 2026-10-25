@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.statemachine;
@@ -30,40 +29,13 @@ import org.springframework.stereotype.Component;
 /**
  * Core state machine governing the lifecycle of a {@link LoanApplication}.
  *
- * <p>This is the <strong>only</strong> component permitted to call {@link
- * LoanApplication#setStatus}. All other layers (service, API, bridge) must go through this class to
- * change application status — direct status mutation is a design violation.
+ * This is the only component permitted to call {@link LoanApplication#setStatus}. All other layers
+ * must go through this class to change application status — direct status mutation is a design
+ * violation.
  *
- * <h2>Design Principles Applied</h2>
- *
- * <ul>
- *   <li><strong>Single Responsibility</strong> — this class does one thing: validate and apply
- *       status transitions
- *   <li><strong>Open/Closed</strong> — new transitions are added to {@link
- *       LoanStateTransitionValidator} only, this class never changes
- *   <li><strong>Guard Clause Pattern</strong> — terminal state check precedes transition validation
- *       for early exit
- *   <li><strong>Audit-First</strong> — every transition is logged at INFO level for operational
- *       visibility
- * </ul>
- *
- * <h2>Concurrency Safety</h2>
- *
- * <p>This class is stateless — all state lives in the {@link LoanApplication} entity which is
- * protected by optimistic locking ({@code @Version}). Concurrent transition attempts on the same
- * application will result in an {@code OptimisticLockException} on the second writer — preventing
- * silent data corruption.
- *
- * <h2>Usage</h2>
- *
- * <pre>
- * // Correct — always go through state machine
- * stateMachine.transition(application,
- *     LoanApplicationStatus.SUBMITTED);
- *
- * // Wrong — never call directly
- * application.setStatus(LoanApplicationStatus.SUBMITTED);
- * </pre>
+ * This class is stateless — all state lives in the {@link LoanApplication} entity, which is
+ * protected by optimistic locking ({@code @Version}). New transitions are added to
+ * {@link LoanStateTransitionValidator} only; this class never changes.
  */
 @Slf4j
 @Component
@@ -76,16 +48,14 @@ public class LoanOriginationStateMachine {
   /**
    * Validates and applies a status transition to the given loan application.
    *
-   * <p>The application entity is mutated in-place. The caller is responsible for persisting the
-   * entity after this method returns successfully.
-   *
-   * <p>This method is intentionally <strong>not</strong> transactional — transaction boundaries are
-   * managed by the service layer to allow batching multiple operations in a single transaction.
+   * The application entity is mutated in-place. The caller is responsible for persisting the
+   * entity after this method returns successfully. This method is intentionally not transactional
+   * — transaction boundaries are managed by the service layer.
    *
    * @param application the loan application to transition
    * @param targetStatus the desired target status
-   * @throws IllegalArgumentException if application is null
-   * @throws IllegalStateException if application is in a terminal state
+   * @throws IllegalArgumentException if application or targetStatus is null
+   * @throws IllegalStateException if the application is in a terminal state
    * @throws LoanStateTransitionException if the transition is not permitted
    */
   public void transition(
@@ -99,7 +69,7 @@ public class LoanOriginationStateMachine {
 
     if (!validator.isValid(currentStatus, targetStatus)) {
       log.warn(
-          "Rejected invalid transition: " + "applicationRef={} tenantId={} " + "from={} to={}",
+          "Rejected invalid transition: applicationRef={} tenantId={} from={} to={}",
           application.getApplicationRef(),
           application.getTenantId(),
           currentStatus,
@@ -110,7 +80,7 @@ public class LoanOriginationStateMachine {
     application.setStatus(targetStatus);
 
     log.info(
-        "State transition applied: " + "applicationRef={} tenantId={} " + "from={} to={}",
+        "State transition applied: applicationRef={} tenantId={} from={} to={}",
         application.getApplicationRef(),
         application.getTenantId(),
         currentStatus,
@@ -119,9 +89,6 @@ public class LoanOriginationStateMachine {
 
   /**
    * Returns all statuses the application can legally transition to from its current status.
-   *
-   * <p>Used by the API layer to return available actions to the client — enabling dynamic UI that
-   * only shows buttons for valid next steps.
    *
    * @param application the loan application to query
    * @return set of permitted next statuses — empty if the application is in a terminal state
@@ -135,8 +102,7 @@ public class LoanOriginationStateMachine {
   }
 
   /**
-   * Returns whether the given application is in a terminal state — no further transitions are
-   * possible.
+   * Returns whether the given application is in a terminal state.
    *
    * @param application the loan application to check
    * @return true if the application is REJECTED or DISBURSED
@@ -149,14 +115,6 @@ public class LoanOriginationStateMachine {
     return application.getStatus().isTerminal();
   }
 
-  /**
-   * Validates that neither the application nor the target status is null before attempting a
-   * transition.
-   *
-   * @param application application to validate
-   * @param targetStatus target status to validate
-   * @throws IllegalArgumentException if either is null
-   */
   private void validateInputs(
       final LoanApplication application, final LoanApplicationStatus targetStatus) {
 
@@ -173,24 +131,12 @@ public class LoanOriginationStateMachine {
     }
   }
 
-  /**
-   * Guards against transition attempts on terminal state applications.
-   *
-   * <p>Terminal states (REJECTED, DISBURSED) have no valid outgoing transitions. Attempting to
-   * transition from a terminal state is always an error regardless of the target status.
-   *
-   * @param application application to check
-   * @param currentStatus current status for logging
-   * @throws IllegalStateException if application is terminal
-   */
   private void guardAgainstTerminalState(
       final LoanApplication application, final LoanApplicationStatus currentStatus) {
 
     if (currentStatus.isTerminal()) {
       log.error(
-          "Transition attempted on terminal application: "
-              + "applicationRef={} tenantId={} "
-              + "status={}",
+          "Transition attempted on terminal application: applicationRef={} tenantId={} status={}",
           application.getApplicationRef(),
           application.getTenantId(),
           currentStatus);

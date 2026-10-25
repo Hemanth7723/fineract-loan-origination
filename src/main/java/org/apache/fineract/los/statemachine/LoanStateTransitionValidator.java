@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.statemachine;
@@ -30,36 +29,22 @@ import org.springframework.stereotype.Component;
  * Defines and validates all permitted state transitions for a {@link
  * org.apache.fineract.los.domain.LoanApplication}.
  *
- * <p>The transition map is the single source of truth for the entire loan origination lifecycle.
- * Adding a new valid transition requires only a one-line change in {@link #buildTransitionMap()} —
- * no other code changes needed.
+ * The transition map is the single source of truth for the loan origination lifecycle. Adding a
+ * new valid transition requires only a one-line change in {@link #buildTransitionMap()}.
  *
- * <p>Uses {@link EnumMap} and {@link EnumSet} for O(1) lookup performance — optimal for
- * high-throughput banking workloads where thousands of applications may be processed concurrently.
+ * Valid transitions:
+ * DRAFT -> SUBMITTED
+ * SUBMITTED -> UNDER_REVIEW
+ * UNDER_REVIEW -> APPROVED, REJECTED, REFERRED
+ * REFERRED -> SUBMITTED, UNDER_REVIEW
+ * APPROVED -> DISBURSED
  *
- * <p>Valid transitions:
- *
- * <pre>
- * DRAFT        → SUBMITTED
- * SUBMITTED    → UNDER_REVIEW
- * UNDER_REVIEW → APPROVED
- * UNDER_REVIEW → REJECTED
- * UNDER_REVIEW → REFERRED
- * REFERRED     → SUBMITTED (customer corrects and resubmits)
- * REFERRED     → UNDER_REVIEW (staff starts review directly)
- * APPROVED     → DISBURSED
- * </pre>
- *
- * <p>Terminal states (REJECTED, DISBURSED) have no outgoing transitions — they are excluded from
- * the map entirely.
+ * Terminal states (REJECTED, DISBURSED) have no outgoing transitions.
  */
 @Component
 public class LoanStateTransitionValidator {
 
-  /**
-   * Immutable map of all valid state transitions. Key: current status. Value: set of permitted next
-   * statuses.
-   */
+  /** Immutable map of all valid state transitions. Key: current status. Value: permitted next statuses. */
   private final Map<LoanApplicationStatus, Set<LoanApplicationStatus>> transitionMap;
 
   /** Constructs the validator and initialises the transition map on startup. */
@@ -68,8 +53,7 @@ public class LoanStateTransitionValidator {
   }
 
   /**
-   * Validates whether a transition from {@code from} to {@code to} is permitted by the state
-   * machine rules.
+   * Returns whether a transition from {@code from} to {@code to} is permitted.
    *
    * @param from current status of the application
    * @param to target status being requested
@@ -83,24 +67,13 @@ public class LoanStateTransitionValidator {
   /**
    * Returns the set of statuses the application can legally transition to from the given status.
    *
-   * <p>Returns an empty set for terminal states (REJECTED, DISBURSED) since no further transitions
-   * are possible.
-   *
    * @param from current status
-   * @return permitted target statuses — never null
+   * @return permitted target statuses — never null, empty for terminal states
    */
   public Set<LoanApplicationStatus> permittedTransitions(final LoanApplicationStatus from) {
     return transitionMap.getOrDefault(from, EnumSet.noneOf(LoanApplicationStatus.class));
   }
 
-  /**
-   * Builds the complete transition map for the loan origination lifecycle.
-   *
-   * <p>Uses {@link EnumMap} for memory efficiency and cache-friendly iteration — all keys are known
-   * at compile time.
-   *
-   * @return immutable-by-convention transition map
-   */
   private Map<LoanApplicationStatus, Set<LoanApplicationStatus>> buildTransitionMap() {
 
     final Map<LoanApplicationStatus, Set<LoanApplicationStatus>> map =

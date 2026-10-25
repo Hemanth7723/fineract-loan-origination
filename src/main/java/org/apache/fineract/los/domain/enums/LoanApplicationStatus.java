@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,30 +11,22 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.domain.enums;
 
 /**
- * Represents the lifecycle states of a LoanApplication.
+ * Lifecycle states of a loan application.
  *
- * <p>Valid transitions are enforced exclusively by {@code LoanOriginationStateMachine}. No code
+ * Valid transitions are enforced exclusively by {@code LoanOriginationStateMachine}. No code
  * outside the state machine may call {@code LoanApplication#setStatus} directly.
  *
- * <pre>
- * DRAFT
- *   └─► SUBMITTED
- *         └─► UNDER_REVIEW
- *               ├─► APPROVED
- *               │     └─► DISBURSED
- *               ├─► REJECTED
- *               └─► REFERRED
- *                     └─► UNDER_REVIEW
- * </pre>
+ * DRAFT -> SUBMITTED -> UNDER_REVIEW -> APPROVED -> DISBURSED
+ *                                    -> REJECTED
+ *                                    -> REFERRED -> UNDER_REVIEW
  */
 public enum LoanApplicationStatus {
 
@@ -79,7 +71,7 @@ public enum LoanApplicationStatus {
     return this == REJECTED || this == DISBURSED;
   }
 
-  /** Returns true if this status allows applicant to edit the application. */
+  /** Returns true if this status allows the applicant to edit the application. */
   public boolean isEditable() {
     return this == DRAFT;
   }

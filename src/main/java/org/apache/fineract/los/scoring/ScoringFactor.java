@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.scoring;
@@ -25,23 +24,12 @@ import org.apache.fineract.los.scoring.model.FactorScore;
 /**
  * Strategy interface for a single credit scoring factor.
  *
- * <p>Each implementation evaluates exactly one dimension of creditworthiness — income ratio, debt
- * burden, employment stability, repayment history, or loan purpose risk — and returns a bounded
- * {@link FactorScore}.
+ * Each implementation evaluates one dimension of creditworthiness and returns a bounded
+ * {@link FactorScore}. Implementations must be pure (no side effects), bounded (score never
+ * exceeds {@code maxPoints()}), and stateless (safe for concurrent singleton use).
  *
- * <p>Implementations must be:
- *
- * <ul>
- *   <li><strong>Pure</strong> — no side effects, no database or network access, deterministic
- *       output for the same input
- *   <li><strong>Bounded</strong> — {@code score()} must never return points exceeding {@code
- *       maxPoints()}
- *   <li><strong>Stateless</strong> — safe for concurrent use as a singleton Spring bean
- * </ul>
- *
- * <p>New factors can be added by implementing this interface and registering as a Spring bean —
- * {@link DefaultCreditScoringStrategy} discovers all factors via constructor injection without
- * requiring code changes.
+ * New factors can be added by implementing this interface and annotating with {@code @Component}
+ * — {@link DefaultCreditScoringStrategy} discovers all factors via constructor injection.
  */
 public interface ScoringFactor {
 
@@ -61,8 +49,8 @@ public interface ScoringFactor {
   int maxPoints();
 
   /**
-   * Returns a unique, stable identifier for this factor. Used as the key in {@link
-   * org.apache.fineract.los.scoring.model.CreditScoreResult#getFactorScores()}.
+   * Returns a unique, stable identifier for this factor. Used as the key in
+   * {@link org.apache.fineract.los.scoring.model.CreditScoreResult#getFactorScores()}.
    *
    * @return factor identifier, e.g. "income-ratio"
    */

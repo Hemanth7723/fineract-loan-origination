@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,10 +11,9 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 
 package org.apache.fineract.los.statemachine;
@@ -26,18 +25,14 @@ import org.apache.fineract.los.exception.LosErrorConstants;
  * Thrown when an invalid state transition is attempted on a {@link
  * org.apache.fineract.los.domain.LoanApplication}.
  *
- * <p>This is an unchecked exception — callers are not required to catch it, but the global
- * exception handler maps it to HTTP 409 Conflict so clients receive a meaningful error.
- *
- * <p>Example: attempting DRAFT → DISBURSED directly will throw this exception with a descriptive
- * message identifying both the current and attempted target status.
+ * Mapped to HTTP 409 Conflict by the global exception handler.
  */
 public class LoanStateTransitionException extends RuntimeException {
 
   /** Current status of the application at time of error. */
   private final LoanApplicationStatus fromStatus;
 
-  /** Target status that was attempted illegally. */
+  /** Target status that was attempted. */
   private final LoanApplicationStatus toStatus;
 
   /**
@@ -65,7 +60,7 @@ public class LoanStateTransitionException extends RuntimeException {
   }
 
   /**
-   * Returns the target status that was illegally attempted.
+   * Returns the target status that was attempted.
    *
    * @return attempted target status
    */
